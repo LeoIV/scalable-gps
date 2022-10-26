@@ -31,7 +31,14 @@ class GaussianProcess:
     def predict_mean_var(self, x: RDD[DenseVector]):
         gram_1 = gram_matrix(x, self.x, self.lengthscales, self.sc)
         gram_2 = np.array(
-            gram_matrix(x, x, self.lengthscales, self.sc).rows.zipWithIndex().map(lambda x: x[0][x[1]]).collect())
+            gram_matrix(  # speedup: we only need the diagonal here, make gram matrix support that
+                x, x,
+                self.lengthscales,
+                self.sc)
+            .rows
+            .zipWithIndex()
+            .map(lambda x: x[0][x[1]])  # extract only the diagonal elements
+            .collect())
         gram_1_dense = np.array(gram_1.rows.map(lambda x: x.toArray()).collect())
         mean = gram_1_dense @ self.inv.toArray() @ self.y_arr
         var = gram_2 - np.diagonal(gram_1_dense @ self.inv.toArray() @ gram_1_dense.T)

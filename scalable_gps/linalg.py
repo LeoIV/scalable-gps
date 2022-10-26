@@ -34,7 +34,7 @@ def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVec
     Args:
         x: RDD of DenseVectors, vectors all need to have the same dimensionality (as y)
         y: RDD of DenseVectors, vectors all need to have the same dimensionality (as x)
-        lengthscales: the lengthscales, have to have the same dimensionality as x and y
+        lengthscales: the lengthscales, have to have the same dimensionality as x and y or 1D
 
     Returns: Gram matrix for the given kernel function
 
@@ -59,7 +59,7 @@ def matrix_inverse(matrix: RowMatrix) -> DenseMatrix:
     Args:
         matrix: the matrix to invert
 
-    Returns: the inversed matrix
+    Returns: the inverted matrix
 
     """
 
