@@ -63,11 +63,13 @@ def matrix_inverse(matrix: RowMatrix) -> DenseMatrix:
 
     """
 
-    svd = matrix.computeSVD(k=matrix.numCols(), computeU=True, rCond=1e-15)  # do the SVD
+    svd = matrix.computeSVD(k=matrix.numCols(), computeU=False, rCond=1e-15)  # do the SVD
+    # in principle, we need U but the Spark SVD implementation is buggy and returns the wrong U so
+    # we compute it ourselves
 
-    s_inv = 1 / svd.s
-    mtrx_orig = np.array(matrix.rows.map(lambda x: x.toArray()).collect())
-    u_dense = mtrx_orig @ (svd.V.toArray() * s_inv[np.newaxis, :])
-    cov_inv = np.matmul(svd.V.toArray(), np.multiply(s_inv[:, np.newaxis], u_dense.T))
-    return DenseMatrix(numRows=cov_inv.shape[0], numCols=cov_inv.shape[1],
-                       values=cov_inv.ravel(order="F"))  # return inverse as dense matrix
+    S_diag_inverse = 1 / svd.s
+    matrix_dense = np.array(matrix.rows.map(lambda x: x.toArray()).collect())
+    U = matrix_dense @ (svd.V.toArray() * S_diag_inverse[np.newaxis, :])
+    matrix_inverse = np.matmul(svd.V.toArray(), np.multiply(S_diag_inverse[:, np.newaxis], U.T))
+    return DenseMatrix(numRows=matrix_inverse.shape[0], numCols=matrix_inverse.shape[1],
+                       values=matrix_inverse.ravel(order="F"))  # return inverse as dense matrix
