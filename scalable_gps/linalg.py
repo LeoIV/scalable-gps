@@ -1,7 +1,9 @@
 import numpy as np
+from pyspark.context import SparkContext
 from pyspark.ml.linalg import DenseVector, DenseMatrix
-from pyspark.mllib.linalg.distributed import MatrixEntry, CoordinateMatrix
+from pyspark.mllib.linalg.distributed import RowMatrix
 from pyspark.rdd import RDD
+from sklearn.gaussian_process.kernels import RBF
 
 
 def rbf_ard_kernel(x: DenseVector, y: DenseVector, lengthscales: DenseVector):
@@ -22,11 +24,10 @@ def rbf_ard_kernel(x: DenseVector, y: DenseVector, lengthscales: DenseVector):
     assert len(lengthscales) == len(y)
     assert lengthscales.ndim == y.ndim
     assert lengthscales.ndim == 1
-    return np.exp(np.sum((x.toArray() - y.toArray()) ** 2 / (2 * lengthscales.toArray()) ** 2))
+    return np.exp(np.sum((x.toArray() - y.toArray()) ** 2 / ((2 * lengthscales.toArray()) ** 2)))
 
 
-def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVector,
-                kernel: str = "rbf-ard") -> CoordinateMatrix:
+def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVector, sc: SparkContext) -> RowMatrix:
     """
     Compute the gram matrix for a given set of vector RDDs and a given kernel function
 
@@ -39,23 +40,19 @@ def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVec
 
     """
 
-    match kernel:
-        case "rbf-ard":
-            kern_func = rbf_ard_kernel
-        case _:
-            raise RuntimeError("Unsupported kernel function")
+    X = np.array(x.map(lambda x: x.toArray()).collect())
+    Y = np.array(y.map(lambda y: y.toArray()).collect())
 
-    x_indexed = x.zipWithIndex()
-    y_indexed = y.zipWithIndex()
-    cartesian = x_indexed.cartesian(y_indexed)
-    cov_indexed = cartesian.map(lambda x: MatrixEntry(x[0][1], x[1][1], kern_func(x[0][0], x[1][0], lengthscales)))
+    kern = RBF(lengthscales.toArray())
+    sigma = kern(X, Y)
 
-    cov_mtrx = CoordinateMatrix(cov_indexed)
+    cov_mtrx = RowMatrix(numRows=sigma.shape[0], numCols=sigma.shape[1],
+                         rows=sc.parallelize(sigma))
 
     return cov_mtrx
 
 
-def matrix_inverse(matrix: CoordinateMatrix) -> DenseMatrix:
+def matrix_inverse(matrix: RowMatrix) -> DenseMatrix:
     """
     Compute the inverse of the given coordinate matrix using singular value decomposition.
 
@@ -65,12 +62,12 @@ def matrix_inverse(matrix: CoordinateMatrix) -> DenseMatrix:
     Returns: the inversed matrix
 
     """
-    k = min(matrix.numRows(), matrix.numCols())  # number of singular values
-    svd = matrix.toRowMatrix().computeSVD(k=k, computeU=True)  # do the SVD
-    u_dense = DenseMatrix(numRows=svd.U.numRows(), numCols=svd.U.numCols(),
-                          values=svd.U.rows.flatMap(
-                              lambda x: x).collect())  # get U as a dense matrix (this performs actions!)
-    s_inv = np.diag(1 / svd.s)  # invert S and make diagonal matrix
-    cov_inv = svd.V.toArray() @ s_inv @ u_dense.toArray().T  # compute inverse
+
+    svd = matrix.computeSVD(k=matrix.numCols(), computeU=True, rCond=1e-15)  # do the SVD
+
+    s_inv = 1 / svd.s
+    mtrx_orig = np.array(matrix.rows.map(lambda x: x.toArray()).collect())
+    u_dense = mtrx_orig @ (svd.V.toArray() * s_inv[np.newaxis, :])
+    cov_inv = np.matmul(svd.V.toArray(), np.multiply(s_inv[:, np.newaxis], u_dense.T))
     return DenseMatrix(numRows=cov_inv.shape[0], numCols=cov_inv.shape[1],
-                       values=cov_inv.ravel())  # return inverse as dense matrix
+                       values=cov_inv.ravel(order="F"))  # return inverse as dense matrix
