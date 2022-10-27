@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="28d642e0-76f1-4f62-b11c-b5d6da65c448" name="Changes" comment="update matrix inverse using IndexedRowMatrix to honor row order">
-      <change afterPath="$PROJECT_DIR$/scalable_gps/util.py" afterDir="false" />
+    <list default="true" id="28d642e0-76f1-4f62-b11c-b5d6da65c448" name="Changes" comment="switch to more spark-heavy implementation of kernel matrix computation">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/demo.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/demo.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scalable_gps/gp.py" beforeDir="false" afterPath="$PROJECT_DIR$/scalable_gps/gp.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scalable_gps/linalg.py" beforeDir="false" afterPath="$PROJECT_DIR$/scalable_gps/linalg.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scalable_gps/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/scalable_gps/util.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +114,7 @@
       <workItem from="1666616110716" duration="6109000" />
       <workItem from="1666687295443" duration="11960000" />
       <workItem from="1666770225994" duration="23552000" />
-      <workItem from="1666868896533" duration="8001000" />
+      <workItem from="1666868896533" duration="16550000" />
     </task>
     <task id="LOCAL-00001" summary="stuff">
       <created>1666795298356</created>
@@ -144,7 +144,14 @@
       <option name="project" value="LOCAL" />
       <updated>1666871575916</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="switch to more spark-heavy implementation of kernel matrix computation">
+      <created>1666876990164</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1666876990164</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -166,10 +173,11 @@
     <MESSAGE value="updates" />
     <MESSAGE value="more documentation" />
     <MESSAGE value="update matrix inverse using IndexedRowMatrix to honor row order" />
-    <option name="LAST_COMMIT_MESSAGE" value="update matrix inverse using IndexedRowMatrix to honor row order" />
+    <MESSAGE value="switch to more spark-heavy implementation of kernel matrix computation" />
+    <option name="LAST_COMMIT_MESSAGE" value="switch to more spark-heavy implementation of kernel matrix computation" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/scalable_gps$main.coverage" NAME="main Coverage Results" MODIFIED="1666794202703" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/scalable_gps$test.coverage" NAME="test Coverage Results" MODIFIED="1666876336149" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/scalable_gps$test.coverage" NAME="test Coverage Results" MODIFIED="1666883118764" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

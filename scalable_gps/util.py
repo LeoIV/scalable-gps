@@ -1,5 +1,7 @@
 from typing import List, Tuple
 
+import numpy as np
+
 
 def _to_list(a):
     return [a]

@@ -9,7 +9,7 @@ from pyspark.rdd import RDD
 from scalable_gps.util import _to_list, _append, _extend, _sort_row
 
 
-def rbf_ard_kernel(x: DenseVector, y: DenseVector, lengthscales: DenseVector):
+def rbf_ard_kernel(x: DenseVector, y: DenseVector, lengthscales: DenseVector, signal_variance: float):
     """
     RBF kernel function with automated relevance detection
 
@@ -17,6 +17,7 @@ def rbf_ard_kernel(x: DenseVector, y: DenseVector, lengthscales: DenseVector):
         x: vector 1
         y: vector 2
         lengthscales: lengthscales, same dimensionality as x and y
+        signal_variance: the signal variance
 
     Returns: k(x,y)
 
@@ -26,10 +27,11 @@ def rbf_ard_kernel(x: DenseVector, y: DenseVector, lengthscales: DenseVector):
 
     dist = np.sum((_x - _y) ** 2)
 
-    return np.exp(-0.5 * dist)
+    return signal_variance*np.exp(-0.5 * dist)
 
 
-def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVector, diagonal=False) -> \
+def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVector, signal_variance: float,
+                diagonal=False) -> \
         Union[IndexedRowMatrix, DenseVector]:
     """
     Compute the gram matrix for a given set of vector RDDs and a given kernel function.
@@ -39,6 +41,7 @@ def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVec
         x: RDD of DenseVectors, vectors all need to have the same dimensionality (as y)
         y: RDD of DenseVectors, vectors all need to have the same dimensionality (as x)
         lengthscales: the lengthscales, have to have the same dimensionality as x and y or 1D
+        signal_variance: the signal_variance
         diagonal: only compute diagonal elements, y is ignored if diagonal is True
 
     Returns: Gram matrix for the given kernel function or DenseVector if diagonal is True
@@ -46,7 +49,7 @@ def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVec
     """
     if diagonal:
         logging.info("for diagonal, ignoring y")
-        matrix_entries = x.map(lambda v: rbf_ard_kernel(v, v, lengthscales))
+        matrix_entries = x.map(lambda v: rbf_ard_kernel(v, v, lengthscales, signal_variance))
         return DenseVector(matrix_entries.collect())
 
     x_indexed_rows = x.zipWithIndex().map(lambda r: IndexedRow(r[1], r[0]))
@@ -57,7 +60,7 @@ def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVec
         lambda rows: (
             rows[0].index,
             (rows[1].index,
-             rbf_ard_kernel(rows[0].vector, rows[1].vector, lengthscales))
+             rbf_ard_kernel(rows[0].vector, rows[1].vector, lengthscales, signal_variance))
         )
     )
 
