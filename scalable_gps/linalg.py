@@ -1,7 +1,6 @@
 import numpy as np
-from pyspark.context import SparkContext
 from pyspark.ml.linalg import DenseVector, DenseMatrix
-from pyspark.mllib.linalg.distributed import RowMatrix
+from pyspark.mllib.linalg.distributed import IndexedRowMatrix, IndexedRow
 from pyspark.rdd import RDD
 from sklearn.gaussian_process.kernels import RBF
 
@@ -27,7 +26,7 @@ def rbf_ard_kernel(x: DenseVector, y: DenseVector, lengthscales: DenseVector):
     return np.exp(np.sum((x.toArray() - y.toArray()) ** 2 / ((2 * lengthscales.toArray()) ** 2)))
 
 
-def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVector, sc: SparkContext) -> RowMatrix:
+def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVector) -> IndexedRowMatrix:
     """
     Compute the gram matrix for a given set of vector RDDs and a given kernel function
 
@@ -39,6 +38,7 @@ def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVec
     Returns: Gram matrix for the given kernel function
 
     """
+    sc = x.context
 
     X = np.array(x.map(lambda x: x.toArray()).collect())
     Y = np.array(y.map(lambda y: y.toArray()).collect())
@@ -46,13 +46,16 @@ def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVec
     kern = RBF(lengthscales.toArray())
     sigma = kern(X, Y)
 
-    cov_mtrx = RowMatrix(numRows=sigma.shape[0], numCols=sigma.shape[1],
-                         rows=sc.parallelize(sigma))
+    cov_mtrx = IndexedRowMatrix(
+        numRows=sigma.shape[0],
+        numCols=sigma.shape[1],
+        rows=sc.parallelize(sigma).zipWithIndex().map(lambda r: IndexedRow(r[1], r[0]))
+    )
 
     return cov_mtrx
 
 
-def matrix_inverse(matrix: RowMatrix) -> DenseMatrix:
+def matrix_inverse(matrix: IndexedRowMatrix) -> DenseMatrix:
     """
     Compute the inverse of the given coordinate matrix using singular value decomposition.
 
@@ -63,13 +66,13 @@ def matrix_inverse(matrix: RowMatrix) -> DenseMatrix:
 
     """
 
-    svd = matrix.computeSVD(k=matrix.numCols(), computeU=False, rCond=1e-15)  # do the SVD
-    # in principle, we need U but the Spark SVD implementation is buggy and returns the wrong U so
-    # we compute it ourselves
+    svd = matrix.computeSVD(k=matrix.numCols(), computeU=True, rCond=1e-15)  # do the SVD
 
-    S_diag_inverse = 1 / svd.s
-    matrix_dense = np.array(matrix.rows.map(lambda x: x.toArray()).collect())
-    U = matrix_dense @ (svd.V.toArray() * S_diag_inverse[np.newaxis, :])
-    matrix_inverse = np.matmul(svd.V.toArray(), np.multiply(S_diag_inverse[:, np.newaxis], U.T))
-    return DenseMatrix(numRows=matrix_inverse.shape[0], numCols=matrix_inverse.shape[1],
-                       values=matrix_inverse.ravel(order="F"))  # return inverse as dense matrix
+    s_diag_inverse = 1 / svd.s.toArray()
+    u = np.array(svd.U.rows.sortBy(lambda r: r.index).map(lambda r: r.vector.toArray()).collect())
+    _matrix_inverse = np.matmul(svd.V.toArray(), np.multiply(s_diag_inverse[:, np.newaxis], u.T))
+    return DenseMatrix(
+        numRows=_matrix_inverse.shape[0],
+        numCols=_matrix_inverse.shape[1],
+        values=_matrix_inverse.ravel(order="F")  # Spark is column major, numpy by default row major
+    )  # return inverse as dense matrix
