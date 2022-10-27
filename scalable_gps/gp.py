@@ -2,7 +2,7 @@ import numpy as np
 from pyspark.ml.linalg import DenseVector
 from pyspark.rdd import RDD
 
-from scalable_gps.linalg import gram_matrix, matrix_inverse
+from scalable_gps.linalg import matrix_inverse, gram_matrix
 
 
 class GaussianProcess:
@@ -14,19 +14,17 @@ class GaussianProcess:
         self.y.cache()
         self.y_arr = np.array(self.y.collect())
         self.lengthscales = lengthscales
+        print("Initializing GP. Calculating matrix inverse of kernel matrix...")
         self.gram = gram_matrix(self.x, self.x, self.lengthscales)
         self.inv = matrix_inverse(self.gram)
 
     def predict_mean_var(self, x: RDD[DenseVector]):
         gram_1 = gram_matrix(x, self.x, self.lengthscales)
-        gram_2 = np.array(
-            gram_matrix(  # speedup: we only need the diagonal here, make gram matrix support that
-                x, x,
-                self.lengthscales)
-            .rows
-            .sortBy(lambda r: r.index)
-            .map(lambda x: x.vector[x.index])  # extract only the diagonal elements
-            .collect())
+        gram_2 = gram_matrix(  # speedup: we only need the diagonal here, make gram matrix support that
+            x, x,
+            self.lengthscales,
+            diagonal=True
+        ).toArray()
         gram_1_dense = np.array(
             gram_1
             .rows

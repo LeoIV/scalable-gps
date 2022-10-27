@@ -1,8 +1,12 @@
+import logging
+from typing import Union
+
 import numpy as np
 from pyspark.ml.linalg import DenseVector, DenseMatrix
 from pyspark.mllib.linalg.distributed import IndexedRowMatrix, IndexedRow
 from pyspark.rdd import RDD
-from sklearn.gaussian_process.kernels import RBF
+
+from scalable_gps.util import _to_list, _append, _extend, _sort_row
 
 
 def rbf_ard_kernel(x: DenseVector, y: DenseVector, lengthscales: DenseVector):
@@ -17,42 +21,53 @@ def rbf_ard_kernel(x: DenseVector, y: DenseVector, lengthscales: DenseVector):
     Returns: k(x,y)
 
     """
-    assert len(x) == len(y)
-    assert x.ndim == y.ndim
-    assert x.ndim == 1
-    assert len(lengthscales) == len(y)
-    assert lengthscales.ndim == y.ndim
-    assert lengthscales.ndim == 1
-    return np.exp(np.sum((x.toArray() - y.toArray()) ** 2 / ((2 * lengthscales.toArray()) ** 2)))
+    _x = (x / lengthscales).toArray()
+    _y = (y / lengthscales).toArray()
+
+    dist = np.sum((_x - _y) ** 2)
+
+    return np.exp(-0.5 * dist)
 
 
-def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVector) -> IndexedRowMatrix:
+def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVector, diagonal=False) -> \
+        Union[IndexedRowMatrix, DenseVector]:
     """
-    Compute the gram matrix for a given set of vector RDDs and a given kernel function
+    Compute the gram matrix for a given set of vector RDDs and a given kernel function.
+    y is ignored if diagonal is True.
 
     Args:
         x: RDD of DenseVectors, vectors all need to have the same dimensionality (as y)
         y: RDD of DenseVectors, vectors all need to have the same dimensionality (as x)
         lengthscales: the lengthscales, have to have the same dimensionality as x and y or 1D
+        diagonal: only compute diagonal elements, y is ignored if diagonal is True
 
-    Returns: Gram matrix for the given kernel function
+    Returns: Gram matrix for the given kernel function or DenseVector if diagonal is True
 
     """
-    sc = x.context
+    if diagonal:
+        logging.info("for diagonal, ignoring y")
+        matrix_entries = x.map(lambda v: rbf_ard_kernel(v, v, lengthscales))
+        return DenseVector(matrix_entries.collect())
 
-    X = np.array(x.map(lambda x: x.toArray()).collect())
-    Y = np.array(y.map(lambda y: y.toArray()).collect())
+    x_indexed_rows = x.zipWithIndex().map(lambda r: IndexedRow(r[1], r[0]))
+    y_indexed_rows = y.zipWithIndex().map(lambda r: IndexedRow(r[1], r[0]))
 
-    kern = RBF(lengthscales.toArray())
-    sigma = kern(X, Y)
-
-    cov_mtrx = IndexedRowMatrix(
-        numRows=sigma.shape[0],
-        numCols=sigma.shape[1],
-        rows=sc.parallelize(sigma).zipWithIndex().map(lambda r: IndexedRow(r[1], r[0]))
+    xy = x_indexed_rows.cartesian(y_indexed_rows)
+    matrix_entries = xy.map(
+        lambda rows: (
+            rows[0].index,
+            (rows[1].index,
+             rbf_ard_kernel(rows[0].vector, rows[1].vector, lengthscales))
+        )
     )
 
-    return cov_mtrx
+    matrix_rows = matrix_entries.combineByKey(_to_list, _append, _extend)
+    matrix_rows = matrix_rows.map(lambda ir: IndexedRow(index=ir[0], vector=_sort_row(ir[1])))
+    matrix_rows.cache()
+
+    matrix = IndexedRowMatrix(matrix_rows)
+
+    return matrix
 
 
 def matrix_inverse(matrix: IndexedRowMatrix) -> DenseMatrix:
