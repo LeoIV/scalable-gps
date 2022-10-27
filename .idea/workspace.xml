@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="28d642e0-76f1-4f62-b11c-b5d6da65c448" name="Changes" comment="switch to more spark-heavy implementation of kernel matrix computation">
+    <list default="true" id="28d642e0-76f1-4f62-b11c-b5d6da65c448" name="Changes" comment="update notebook">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/demo.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scalable_gps/gp.py" beforeDir="false" afterPath="$PROJECT_DIR$/scalable_gps/gp.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scalable_gps/linalg.py" beforeDir="false" afterPath="$PROJECT_DIR$/scalable_gps/linalg.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scalable_gps/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/scalable_gps/util.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +111,7 @@
       <workItem from="1666616110716" duration="6109000" />
       <workItem from="1666687295443" duration="11960000" />
       <workItem from="1666770225994" duration="23552000" />
-      <workItem from="1666868896533" duration="16550000" />
+      <workItem from="1666868896533" duration="17078000" />
     </task>
     <task id="LOCAL-00001" summary="stuff">
       <created>1666795298356</created>
@@ -151,7 +148,21 @@
       <option name="project" value="LOCAL" />
       <updated>1666876990164</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="support noise and signal variance and negative log likelihood">
+      <created>1666886178191</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1666886178191</updated>
+    </task>
+    <task id="LOCAL-00007" summary="update notebook">
+      <created>1666886263921</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1666886263921</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -174,7 +185,9 @@
     <MESSAGE value="more documentation" />
     <MESSAGE value="update matrix inverse using IndexedRowMatrix to honor row order" />
     <MESSAGE value="switch to more spark-heavy implementation of kernel matrix computation" />
-    <option name="LAST_COMMIT_MESSAGE" value="switch to more spark-heavy implementation of kernel matrix computation" />
+    <MESSAGE value="support noise and signal variance and negative log likelihood" />
+    <MESSAGE value="update notebook" />
+    <option name="LAST_COMMIT_MESSAGE" value="update notebook" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/scalable_gps$main.coverage" NAME="main Coverage Results" MODIFIED="1666794202703" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

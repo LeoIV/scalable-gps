@@ -27,7 +27,7 @@ def rbf_ard_kernel(x: DenseVector, y: DenseVector, lengthscales: DenseVector, si
 
     dist = np.sum((_x - _y) ** 2)
 
-    return signal_variance*np.exp(-0.5 * dist)
+    return signal_variance * np.exp(-0.5 * dist)
 
 
 def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVector, signal_variance: float,
@@ -55,7 +55,12 @@ def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVec
     x_indexed_rows = x.zipWithIndex().map(lambda r: IndexedRow(r[1], r[0]))
     y_indexed_rows = y.zipWithIndex().map(lambda r: IndexedRow(r[1], r[0]))
 
-    xy = x_indexed_rows.cartesian(y_indexed_rows)
+    xy = x_indexed_rows.cartesian(y_indexed_rows)  # cartesian product of vector lists
+
+    # TODO: maybe it's better to make this a block matrix at this point and do the kernel with NumPy on the blocks
+    # TODO: also, we can save some computations if we only do the lower / upper triangular for the quadratic part of
+    #  the matrix
+
     matrix_entries = xy.map(
         lambda rows: (
             rows[0].index,
@@ -64,8 +69,9 @@ def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVec
         )
     )
 
-    matrix_rows = matrix_entries.combineByKey(_to_list, _append, _extend)
-    matrix_rows = matrix_rows.map(lambda ir: IndexedRow(index=ir[0], vector=_sort_row(ir[1])))
+    matrix_rows = matrix_entries.combineByKey(_to_list, _append, _extend)  # group by rows
+    matrix_rows = matrix_rows.map(
+        lambda ir: IndexedRow(index=ir[0], vector=_sort_row(ir[1])))  # make rows to indexed rows
     matrix_rows.cache()
 
     matrix = IndexedRowMatrix(matrix_rows)
