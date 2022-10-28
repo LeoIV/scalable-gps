@@ -3,8 +3,9 @@ from typing import Union
 
 import numpy as np
 from pyspark.ml.linalg import DenseVector, DenseMatrix
-from pyspark.mllib.linalg.distributed import IndexedRowMatrix, IndexedRow
+from pyspark.mllib.linalg.distributed import IndexedRowMatrix, IndexedRow, MatrixEntry
 from pyspark.rdd import RDD
+from sklearn.gaussian_process.kernels import RBF
 
 from scalable_gps.util import _to_list, _append, _extend, _sort_row
 
@@ -52,27 +53,37 @@ def gram_matrix(x: RDD[DenseVector], y: RDD[DenseVector], lengthscales: DenseVec
         matrix_entries = x.map(lambda v: rbf_ard_kernel(v, v, lengthscales, signal_variance))
         return DenseVector(matrix_entries.collect())
 
-    x_indexed_rows = x.zipWithIndex().map(lambda r: IndexedRow(r[1], r[0]))
-    y_indexed_rows = y.zipWithIndex().map(lambda r: IndexedRow(r[1], r[0]))
+    if x.count() <= 1024 and y.count() <= 1024:
+        X = (x.map(lambda v: v.toArray()).collect())
+        Y = (y.map(lambda v: v.toArray()).collect())
+        kern = RBF(lengthscales)
+        gram = signal_variance * kern(X, Y)
 
-    xy = x_indexed_rows.cartesian(y_indexed_rows)  # cartesian product of vector lists
+        matrix_rows = x.context.parallelize(enumerate(gram)).map(lambda r: IndexedRow(r[0], r[1]))
+        matrix_rows.cache()
+    else:
 
-    # TODO: maybe it's better to make this a block matrix at this point and do the kernel with NumPy on the blocks
-    # TODO: also, we can save some computations if we only do the lower / upper triangular for the quadratic part of
-    #  the matrix
+        x_indexed_rows = x.zipWithIndex().map(lambda r: IndexedRow(r[1], r[0]))
+        y_indexed_rows = y.zipWithIndex().map(lambda r: IndexedRow(r[1], r[0]))
 
-    matrix_entries = xy.map(
-        lambda rows: (
-            rows[0].index,
-            (rows[1].index,
-             rbf_ard_kernel(rows[0].vector, rows[1].vector, lengthscales, signal_variance))
+        xy = x_indexed_rows.cartesian(y_indexed_rows)  # cartesian product of vector lists
+
+        # TODO: maybe it's better to make this a block matrix at this point and do the kernel with NumPy on the blocks
+        # TODO: also, we can save some computations if we only do the lower / upper triangular for the quadratic part of
+        #  the matrix
+
+        matrix_entries = xy.map(
+            lambda rows: (
+                rows[0].index,
+                (rows[1].index,
+                 rbf_ard_kernel(rows[0].vector, rows[1].vector, lengthscales, signal_variance))
+            )
         )
-    )
 
-    matrix_rows = matrix_entries.combineByKey(_to_list, _append, _extend)  # group by rows
-    matrix_rows = matrix_rows.map(
-        lambda ir: IndexedRow(index=ir[0], vector=_sort_row(ir[1])))  # make rows to indexed rows
-    matrix_rows.cache()
+        matrix_rows = matrix_entries.combineByKey(_to_list, _append, _extend)  # group by rows
+        matrix_rows = matrix_rows.map(
+            lambda ir: IndexedRow(index=ir[0], vector=_sort_row(ir[1])))  # make rows to indexed rows
+        matrix_rows.cache()
 
     matrix = IndexedRowMatrix(matrix_rows)
 
@@ -93,7 +104,12 @@ def matrix_inverse(matrix: IndexedRowMatrix) -> DenseMatrix:
     svd = matrix.computeSVD(k=matrix.numCols(), computeU=True, rCond=1e-15)  # do the SVD
 
     s_diag_inverse = 1 / svd.s.toArray()
-    u = np.array(svd.U.rows.sortBy(lambda r: r.index).map(lambda r: r.vector.toArray()).collect())
+
+    if matrix.numCols() <= 2 ** 10 and matrix.numRows() <= 2 ** 10:
+        matrix_dense = matrix.toBlockMatrix().blocks.first()[1].toArray()
+        u = matrix_dense @ svd.V.toArray() @ np.diag(s_diag_inverse)
+    else:
+        u = np.array(svd.U.rows.sortBy(lambda r: r.index).map(lambda r: r.vector.toArray()).collect())
     _matrix_inverse = np.matmul(svd.V.toArray(), np.multiply(s_diag_inverse[:, np.newaxis], u.T))
     return DenseMatrix(
         numRows=_matrix_inverse.shape[0],

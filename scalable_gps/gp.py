@@ -10,8 +10,14 @@ from scalable_gps.linalg import matrix_inverse, gram_matrix
 
 class GaussianProcess:
 
-    def __init__(self, x: RDD[DenseVector], y: RDD[float], lengthscales: np.ndarray, noise: float,
-                 signal_variance: float):
+    def __init__(
+            self,
+            x: RDD[DenseVector],
+            y: RDD[float],
+            lengthscales: np.ndarray,
+            noise: float,
+            signal_variance: float
+    ):
         self.x = x
         self.y = y
         self.x.cache()
@@ -148,9 +154,58 @@ class GaussianProcess:
         Returns: negative log likelihood for the model
 
         """
-        sign, ldet = np.linalg.slogdet(
-            np.array(self.gram_with_noise.rows.sortBy(lambda r: r.index).map(
-                lambda r: r.vector.toArray()).collect()))
+
+        if self.gram_with_noise.numRows() <= 2 ** 10 and self.gram_with_noise.numCols() <= 2 ** 10:
+            gwn_dense = self.gram_with_noise.toBlockMatrix().blocks.first()[1].toArray()
+        else:
+            gwn_dense = np.array(self.gram_with_noise.rows.sortBy(lambda r: r.index).map(
+                lambda r: r.vector.toArray()).collect())
+
+        sign, ldet = np.linalg.slogdet(gwn_dense)
         return 0.5 * (sign * ldet + self.y_dense.dot(
             self.inv.toArray().dot(self.y_dense)) + self.x.count() * np.log(
             2 * np.pi))
+
+    def optimize(
+            self,
+            lengthscale_constraints: Tuple[np.ndarray, np.ndarray],
+            noise_constraints: Tuple[float, float],
+            signal_variance_constraints: Tuple[float, float],
+            method: str = "random search",
+            n_steps: int = 10,
+            grid_resolution: int = 100
+    ):
+
+        ls_range = np.linspace(lengthscale_constraints[0], lengthscale_constraints[1], grid_resolution).T
+        nc_range = np.linspace(noise_constraints[0], noise_constraints[1], grid_resolution)
+        sv_range = np.linspace(signal_variance_constraints[0], signal_variance_constraints[1], grid_resolution)
+
+        rng = np.random.default_rng()
+        param_configs = rng.choice(np.vstack([ls_range, nc_range, sv_range]), size=n_steps, axis=1).T
+
+        nlls = []
+
+        for i, param_config in enumerate(param_configs):
+            ls = param_config[:-2]
+            noise = param_config[-2]
+            signal_variance = param_config[-1]
+
+            self.lengthscales = ls
+            self.noise = noise
+            self.signal_variance = signal_variance
+
+            nll = self.negative_log_likelihood()
+            nlls.append(nll)
+
+        best_param = np.argmin(nlls)
+
+        ls = param_configs[best_param, :-2]
+        noise = param_configs[best_param, -2]
+        signal_variance = param_configs[best_param, -1]
+
+        print(f"Minimum negative log likelihood of {np.min(nlls):.3}, noise is set to {noise:.3} and signal variance "
+              f"to {signal_variance:.3}")
+
+        self.lengthscales = ls
+        self.noise = noise
+        self.signal_variance = signal_variance
