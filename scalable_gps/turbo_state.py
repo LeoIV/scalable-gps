@@ -1,16 +1,18 @@
 import math
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Dict, List
 
 import torch
+from torch import Tensor
 import gpytorch
 from torch.quasirandom import SobolEngine
 from botorch.models import SingleTaskGP
-from gpytorch.likelihoods import GaussianLikelihood
+from gpytorch.models import ExactGP
+from gpytorch.likelihoods import Likelihood, GaussianLikelihood
 from gpytorch.constraints import Interval
 from gpytorch.kernels import Kernel, MaternKernel, ScaleKernel
-from gpytorch.mlls import ExactMarginalLogLikelihood
-
+from gpytorch.mlls import MarginalLogLikelihood, ExactMarginalLogLikelihood
+from botorch.optim.fit import fit_gpytorch_torch
 from scalable_gps.objective import OptimizationProblem
 from scalable_gps.turbo_util import optimize_llhood, generate_batch
 
@@ -21,7 +23,12 @@ class TurboInstance:
             self,
             batch_size: int,
             function: OptimizationProblem,
-            covar_module: Optional[Kernel] = None,
+            model: ExactGP,
+            model_kwargs: Dict = {},
+            likelihood: Likelihood = GaussianLikelihood,
+            likelihood_kwargs: Dict = {},
+            model_parameters: List[Dict[str, Tensor]] = None,
+            mll_opt: MarginalLogLikelihood = ExactMarginalLogLikelihood,
             n_init: Optional[int] = None,
             identifier: str = "",
             seed: int = 0
@@ -29,6 +36,11 @@ class TurboInstance:
         self.batch_size = batch_size
         self.dim = function.dim()
         self.function = function
+        self.model = model
+        self.model_kwargs = model_kwargs
+        self.likelihood = likelihood
+        self.parameters = model_parameters
+        self.mll_opt = mll_opt
         self.n_init = 2 * self.dim if n_init is None else n_init
         self.state = TurboState(self.dim, self.batch_size)
         self.num_restarts = 10
@@ -36,10 +48,6 @@ class TurboInstance:
         self.n_candidates = min(5000, max(2000, 200 * self.dim))
         self.identifier = identifier
         self.seed = seed
-        if covar_module is None:
-            self.covar_module = ScaleKernel(
-                MaternKernel(nu=2.5, ard_num_dims=self.dim, lengthscale_constraint=Interval(0.005, 4.0))
-            )
             
         self.X = torch.empty((0, self.dim))
         self.y = torch.empty(0)
@@ -58,20 +66,18 @@ class TurboInstance:
         self.y = torch.cat((self.y, y_init))
 
         model_parameters = None
-
         while not self.state.restart_triggered:
             train_y = (self.y - self.y.mean()) / self.y.std()
-            likelihood = GaussianLikelihood(noise_constraint=Interval(1e-8, 1e-3))
-            model = SingleTaskGP(
-                self.X, self.y.unsqueeze(-1), covar_module=self.covar_module, likelihood=likelihood
-            )
-            if model_parameters is not None:
-                model.load_state_dict(model_parameters)
-            mll = ExactMarginalLogLikelihood(model.likelihood, model)
-
+            
+            model = self.model(
+                self.X, train_y.unsqueeze(-1), **self.model_kwargs)
+            mll = self.mll_opt(model.likelihood, model)
+            
             with gpytorch.settings.max_cholesky_size(float("inf")):
                 # Fit the model
-                optimize_llhood(model=model, train_x=self.X, train_y=self.y, mll=mll)
+                
+                fit_gpytorch_torch(mll, options={'disp': False})
+                    
                 model_parameters = model.state_dict()
                 # Create a batch
                 x_next = generate_batch(

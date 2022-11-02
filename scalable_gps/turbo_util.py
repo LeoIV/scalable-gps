@@ -66,12 +66,13 @@ def generate_batch(
     return X_next
 
 
-def optimize_llhood(model, train_x, train_y, mll, num_steps=50):
+def optimize_llhood(model, train_x, train_y, mll, parameters=None, num_steps=50):
     model.train()
     model.likelihood.train()
-
-    optimizer = torch.optim.Adam([{"params": model.parameters()}], lr=0.1)
-
+    if parameters is None:
+        parameters = [{"params": model.parameters()}]
+    optimizer = torch.optim.Adam(parameters, lr=0.1)
+        
     cum_loss = 0
     for _ in range(
             num_steps
