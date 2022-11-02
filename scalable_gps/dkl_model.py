@@ -1,36 +1,44 @@
 import math
 import tqdm
 import torch
-import gpytorch
+from torch.nn import Linear, ReLU
+from botorch.models.gpytorch import GPyTorchModel
 
-class LargeFeatureExtractor(torch.nn.Sequential):
-    def __init__(self, layer_depths = None):
-        self.add_module('linear1', torch.nn.Linear(data_dim, 256))
-        self.add_module('relu1', torch.nn.ReLU())
-        self.add_module('linear2', torch.nn.Linear(256, 128))
-        self.add_module('relu2', torch.nn.ReLU())
-        self.add_module('linear3', torch.nn.Linear(128, 64))
-        self.add_module('relu3', torch.nn.ReLU())
-        self.add_module('linear4', torch.nn.Linear(64, 16))        
-        self.add_module('relu4', torch.nn.ReLU())
-        self.add_module('linear5', torch.nn.Linear(16, 2))
+from gpytorch.kernels import Kernel, MaternKernel, ScaleKernel, GridInterpolationKernel
+from gpytorch.means import ConstantMean
+from gpytorch.models import ExactGP
+from gpytorch.utils.grid import ScaleToBounds
+from gpytorch.distributions import MultivariateNormal
+
+
+
+class FeatureExtractor(torch.nn.Sequential):
+    def __init__(self, data_dim, layer_depths = None):
+        super(FeatureExtractor, self).__init__()
+        self.add_module('linear1', Linear(data_dim, 128))
+        self.add_module('relu1', ReLU())
+        self.add_module('linear2', Linear(128, 64))
+        self.add_module('relu2', ReLU())
+        self.add_module('linear3', Linear(64, 16))
+        self.add_module('relu3', ReLU())
+        self.add_module('linear5', Linear(16, 2))
  
 
-class GPRegressionModel(gpytorch.models.ExactGP):
+class GPRegressionModel(GPyTorchModel, ExactGP):
 
     # Freeze everything but the last layer when training locally?
-    def __init__(self, train_x, train_y, likelihood):
+    def __init__(self, train_x, train_y, likelihood, architecture):
         super(GPRegressionModel, self).__init__(train_x, train_y, likelihood)
         
-        self.mean_module = gpytorch.means.ConstantMean()
-        self.covar_module = gpytorch.kernels.GridInterpolationKernel(
-            gpytorch.kernels.ScaleKernel(gpytorch.kernels.Matern(ard_num_dims=2)),
+        self.mean_module = ConstantMean()
+        self.covar_module = GridInterpolationKernel(
+            ScaleKernel(MaternKernel(ard_num_dims=2)),
             num_dims=2, grid_size=100
         )
-        self.feature_extractor = feature_extractor
+        self.feature_extractor = architecture
 
         # This module will scale the NN features so that they're nice values
-        self.scale_to_bounds = gpytorch.utils.grid.ScaleToBounds(-1., 1.)
+        self.scale_to_bounds = ScaleToBounds(-1., 1.)
 
     def forward(self, x):
         # We're first putting our data through a deep net (feature extractor)
@@ -39,4 +47,6 @@ class GPRegressionModel(gpytorch.models.ExactGP):
 
         mean_x = self.mean_module(projected_x)
         covar_x = self.covar_module(projected_x)
-        return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+        return MultivariateNormal(mean_x, covar_x)
+
+    
