@@ -24,11 +24,11 @@ class FeatureExtractor(torch.nn.Sequential):
         self.add_module('linear5', Linear(16, 2))
  
 
-class GPRegressionModel(GPyTorchModel, ExactGP):
+class DeepKernelGPRegressor(GPyTorchModel, ExactGP):
 
     # Freeze everything but the last layer when training locally?
     def __init__(self, train_x, train_y, likelihood, architecture):
-        super(GPRegressionModel, self).__init__(train_x, train_y, likelihood)
+        super(DeepKernelGPRegressor, self).__init__(train_x, train_y, likelihood)
         
         self.mean_module = ConstantMean()
         self.covar_module = GridInterpolationKernel(

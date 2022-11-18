@@ -13,6 +13,8 @@ from gpytorch.constraints import Interval
 from gpytorch.kernels import Kernel, MaternKernel, ScaleKernel
 from gpytorch.mlls import MarginalLogLikelihood, ExactMarginalLogLikelihood
 from botorch.optim.fit import fit_gpytorch_torch
+
+from scalable_gps.dkl_model import DeepKernelGPRegressor
 from scalable_gps.objective import OptimizationProblem
 from scalable_gps.turbo_util import optimize_llhood, generate_batch
 
@@ -48,7 +50,7 @@ class TurboInstance:
         self.n_candidates = min(5000, max(2000, 200 * self.dim))
         self.identifier = identifier
         self.seed = seed
-            
+
         self.X = torch.empty((0, self.dim))
         self.y = torch.empty(0)
         self.has_run = False
@@ -68,16 +70,16 @@ class TurboInstance:
         model_parameters = None
         while not self.state.restart_triggered:
             train_y = (self.y - self.y.mean()) / self.y.std()
-            
+
             model = self.model(
-                self.X, train_y.unsqueeze(-1), **self.model_kwargs)
-            mll = self.mll_opt(model.likelihood, model)
-            
+                self.X, train_y.unsqueeze(-1), **self.model_kwargs) if not hasattr(self.model, 'feature_extractor') else self.model
+
             with gpytorch.settings.max_cholesky_size(float("inf")):
                 # Fit the model
-                
-                fit_gpytorch_torch(mll, options={'disp': False})
-                    
+                if not hasattr(self.model, 'feature_extractor'):
+                    mll = self.mll_opt(model.likelihood, model)
+                    fit_gpytorch_torch(mll, options={'disp': False})
+
                 model_parameters = model.state_dict()
                 # Create a batch
                 x_next = generate_batch(
@@ -101,12 +103,12 @@ class TurboInstance:
                 print(
                     f"{self.identifier}: {len(self.X)}) Best value: {self.state.best_value:.3}, TR length: {self.state.length:.3f}"
                 )
-        self.has_run = True    
+        self.has_run = True
         return self.X, self.y
 
-
     def reset(self):
-        pass          
+        pass
+
 
 @dataclass
 class TurboState:

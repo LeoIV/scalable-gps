@@ -1,3 +1,5 @@
+from warnings import warn
+
 import torch
 from botorch.acquisition import qExpectedImprovement
 from botorch.generation import MaxPosteriorSampling
@@ -23,9 +25,13 @@ def generate_batch(
 
     # Scale the TR to be proportional to the lengthscales
     x_center = X[Y.argmax(), :].clone()
-    weights = model.covar_module.base_kernel.lengthscale.squeeze().detach()
-    weights = weights / weights.mean()
-    weights = weights / torch.prod(weights.pow(1.0 / len(weights)))
+    try:
+        weights = model.covar_module.base_kernel.lengthscale.squeeze().detach()
+        weights = weights / weights.mean()
+        weights = weights / torch.prod(weights.pow(1.0 / len(weights)))
+    except:
+        warn("Could not find base kernel lengthscales, using square TR.")
+        weights = torch.ones(X.shape[1])
     tr_lb = torch.clamp(x_center - weights * state.length / 2.0, 0.0, 1.0)
     tr_ub = torch.clamp(x_center + weights * state.length / 2.0, 0.0, 1.0)
 
@@ -72,7 +78,7 @@ def optimize_llhood(model, train_x, train_y, mll, parameters=None, num_steps=50)
     if parameters is None:
         parameters = [{"params": model.parameters()}]
     optimizer = torch.optim.Adam(parameters, lr=0.1)
-        
+
     cum_loss = 0
     for _ in range(
             num_steps
