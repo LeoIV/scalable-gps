@@ -3,6 +3,7 @@ import os
 from os.path import join, dirname, isdir
 from glob import glob
 
+from typing import List
 from copy import copy
 import matplotlib.pyplot as plt
 from matplotlib import ticker
@@ -202,20 +203,10 @@ def plot_optimization(data_dict, preprocessing=None, title='benchmark', xlabel='
     if plot_ax is not None:
         return ax
 
-
-if __name__ == '__main__':
-
-    # EXAMPLE: 
-    # cd scalable_gps
-    # python plot.py myplotname TurBO,TurBO-DKL Ackley-5,Branin,Hartmann-6 
-
-
-    experiment_name, algos, functions = sys.argv[1:]
-    functions = functions.split(',')
-    algos = algos.split(',')
+def plot(experiment_name: str, algos: List[str], functions: List[str]):
     
     files = get_files_from_experiment(
-        'results/experiment_name', functions, algos)
+        f'{os.getcwd()}/experiment_name', functions, algos)
 
     num_benchmarks = len(files)
     if num_benchmarks == 0:
@@ -240,4 +231,5 @@ if __name__ == '__main__':
                           show_ylabel=False,
                           )
     plt.tight_layout()
-    plt.savefig(f'{experiment_name}_{'_'.join(functions)}.pdf')
+    plt.savefig(f'{os.getcwd()}/results/{experiment_name}_{'_'.join(functions)}.pdf')
+    plt.show()
