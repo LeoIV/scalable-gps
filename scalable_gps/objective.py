@@ -32,12 +32,17 @@ class OptimizationProblem(ABC):
     def dim(self) -> int:
         raise NotImplementedError()
 
+    @abstractmethod
+    def name(self) -> str:
+        raise NotImplementedError()
+
 
 class Ackley(OptimizationProblem):
 
     def __init__(self, dim: int):
         self._dim = dim
         self._ackley = _Ackley(dim=dim, negate=True)
+        self._name = f'Ackley-{dim}'
 
     def __call__(self, x: torch.Tensor):
         return eval_objective(x, self._ackley)
@@ -50,3 +55,6 @@ class Ackley(OptimizationProblem):
 
     def dim(self) -> int:
         return self._dim
+    
+    def name(self) -> str:
+        return self._name
