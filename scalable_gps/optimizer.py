@@ -1,29 +1,27 @@
-import torch
-from torch import Tensor
-from objective import OptimizationProblem
-from typing import Optional, Any, List, Dict
-from turbo_state import TurboInstance
-from objective import Ackley
-from scalable_gps.objective import Ackley
-from scalable_gps.turbo_state import TurboInstance
-from pyspark.sql import SparkSession
+from logging import info
+from typing import Optional, Dict
 
+import torch
 import tqdm
-from botorch.models import SingleTaskGP
-from gpytorch.likelihoods import Likelihood, GaussianLikelihood
-from gpytorch.constraints import Interval
-from gpytorch.kernels import Kernel, MaternKernel, ScaleKernel, GridInterpolationKernel
 from botorch.generation import MaxPosteriorSampling
+from botorch.models import SingleTaskGP
+from gpytorch.likelihoods import GaussianLikelihood
+from gpytorch.mlls import ExactMarginalLogLikelihood
+from pyspark.sql import SparkSession
+from torch import Tensor
 from torch.quasirandom import SobolEngine
 
-from gpytorch.mlls import MarginalLogLikelihood, ExactMarginalLogLikelihood
 from dkl_model import FeatureExtractor, DeepKernelGPRegressor
+from objective import OptimizationProblem
+from scalable_gps.objective import Ackley
+from scalable_gps.turbo_state import TurboInstance
 
 
 class ScalableOptimizer:
 
     def __init__(self,
                  objective: OptimizationProblem,
+                 outer_iterations: int = 10,
                  num_parallel: int = 2,
                  num_total_iterations: int = -1,
                  batch_size: int = 2,
@@ -38,12 +36,14 @@ class ScalableOptimizer:
         self.turbo_kwargs = turbo_kwargs
         self.objective = objective
         self.dim = objective.dim()
+        self.outer_iterations = outer_iterations
 
     def optimize(self):
         x_global = torch.empty((0, self.dim))
         y_global = torch.empty(0)
         deep_kernel_model = None
-        for i_outer in range(5):
+        for i_outer in range(self.outer_iterations):
+            info(f"Starting outer iteration {i_outer + 1}")
             self.turbo_processes = [
                 TurboInstance(
                     batch_size=self.batch_size,
@@ -64,7 +64,8 @@ class ScalableOptimizer:
             deep_kernel_model = self._train_deepkernel(x_global, y_global_normalized)
         deep_kernel_model_posterior = deep_kernel_model.posterior(x_global)
 
-        print('prediction errors', deep_kernel_model_posterior.mean.flatten() - ((y_global - y_global.mean()) / y_global.std()).flatten())
+        print('prediction errors',
+              deep_kernel_model_posterior.mean.flatten() - ((y_global - y_global.mean()) / y_global.std()).flatten())
 
         thompson_sampling = MaxPosteriorSampling(model=deep_kernel_model, replacement=False)
 
