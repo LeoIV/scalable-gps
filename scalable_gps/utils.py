@@ -15,7 +15,7 @@ def save(X, y, optimizer_name, function_name):
     # retrieves the plotting data based on the name of this column - must be called y (or change plotting script)
     results_cols.append('y')
     
-    result_path = join(join(join(dirname(dirname(abspath(__file__))), 'results', function_name), optimizer_name))
+    result_path = join(join(join(os.getcwd(), 'results', function_name), optimizer_name))
     run_index = os.listdir(result_path)
     os.makedirs(result_path, exist_ok=True)
 
