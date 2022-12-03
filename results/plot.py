@@ -203,10 +203,11 @@ def plot_optimization(data_dict, preprocessing=None, title='benchmark', xlabel='
     if plot_ax is not None:
         return ax
 
-def plot(experiment_name: str, algos: List[str], functions: List[str]):
-    
+
+def plot(algos: List[str], functions: List[str], experiment_name: str):
+
     files = get_files_from_experiment(
-        f'{os.getcwd()}/experiment_name', functions, algos)
+        f'{os.getcwd()}/results', functions, algos)
 
     num_benchmarks = len(files)
     if num_benchmarks == 0:
@@ -214,7 +215,7 @@ def plot(experiment_name: str, algos: List[str], functions: List[str]):
 
     fig, ax = plt.subplots(1, num_benchmarks, figsize=(25, 9))
     for benchmark_idx, (benchmark_name, paths) in enumerate(files.items()):
-        
+
         preprocessing = [(get_min, [], {'metric': 'y'}), (compute_regret, [], {
             'log': True, 'regret': REGRETS[benchmark_name]})]
         plot_optimization(paths,
@@ -231,5 +232,5 @@ def plot(experiment_name: str, algos: List[str], functions: List[str]):
                           show_ylabel=False,
                           )
     plt.tight_layout()
-    plt.savefig(f'{os.getcwd()}/results/{experiment_name}_{'_'.join(functions)}.pdf')
+    plt.savefig(f'{os.getcwd()}/{experiment_name}_{'_'.join(functions)}.pdf')
     plt.show()
