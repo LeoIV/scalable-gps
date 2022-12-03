@@ -66,8 +66,8 @@ def filter_paths(all_paths, included_names=None):
 
 def get_files_from_experiment(experiment_name, benchmarks=None, acquisitions=None):
     '''
-    For a specific expefiment, gets a dictionary of all the {benchmark: {method: [output_file_paths]}}
-    as a dict, includiong all benchmarks and acquisition functions unless specified otherwise in 
+    For a specific experiment, gets a dictionary of all the {benchmark: {method: [output_file_paths]}}
+    as a dict, including all benchmarks and acquisition functions unless specified otherwise in
     the arguments.
     '''
     paths_dict = {}

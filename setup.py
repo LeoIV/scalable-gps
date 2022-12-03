@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name="scalable-gps",
+    name="scalable_gps",
     version="0.0.2",
     packages=["scalable_gps"],
     install_requires=[
