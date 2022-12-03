@@ -103,7 +103,7 @@ class Rover(OptimizationProblem):
         if x.ndim == 1:
             x = np.expand_dims(x, 0)
         assert x.ndim == 2
-        costs = [-self._domain(y) for y in x]
+        costs = [self._domain(y) for y in x]
 
         costs = np.array(costs).squeeze()
         return torch.tensor(costs)
