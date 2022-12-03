@@ -37,7 +37,6 @@ class OptimizationProblem(ABC):
     def dim(self) -> int:
         raise NotImplementedError()
 
-    @abstractmethod
     def name(self) -> str:
         return self._name
 
