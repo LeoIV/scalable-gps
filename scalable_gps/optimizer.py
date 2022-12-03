@@ -15,17 +15,18 @@ from dkl_model import FeatureExtractor, DeepKernelGPRegressor
 from objective import OptimizationProblem
 from scalable_gps.objective import Ackley
 from scalable_gps.turbo_state import TurboInstance
-
+from utils import save
 
 class ScalableOptimizer:
 
     def __init__(self,
                  objective: OptimizationProblem,
-                 outer_iterations: int = 10,
+                 outer_iterations: int = 0,
                  num_parallel: int = 2,
                  num_total_iterations: int = -1,
                  batch_size: int = 2,
                  turbo_kwargs: Optional[Dict] = {},
+                 name: str = 'TurBO-DKL'
                  ):
         self.spark = SparkSession.builder.getOrCreate()
         self.sc = self.spark.sparkContext
@@ -37,10 +38,12 @@ class ScalableOptimizer:
         self.objective = objective
         self.dim = objective.dim()
         self.outer_iterations = outer_iterations
+        self.name = name
 
     def optimize(self):
         x_global = torch.empty((0, self.dim))
         y_global = torch.empty(0)
+
         deep_kernel_model = None
         for i_outer in range(self.outer_iterations):
             info(f"Starting outer iteration {i_outer + 1}")
@@ -55,29 +58,31 @@ class ScalableOptimizer:
             turbos = self.sc.parallelize(self.turbo_processes)
             res = turbos.map(lambda t: t.optimize())
             data = res.collect()
-            x_aggregated = torch.cat([Tensor(proc_data[0]) for proc_data in data], axis=0)
-            y_aggregated = torch.cat([Tensor(proc_data[1]) for proc_data in data], axis=0)
+            x_aggregated = torch.cat([Tensor(proc_data[0])
+                                     for proc_data in data], axis=0)
+            y_aggregated = torch.cat([Tensor(proc_data[1])
+                                     for proc_data in data], axis=0)
             x_global = torch.cat((x_global, x_aggregated), dim=0)
             y_global = torch.cat((y_global, y_aggregated), dim=0)
             y_global_normalized = (y_global - y_global.mean()) / y_global.std()
 
-            deep_kernel_model = self._train_deepkernel(x_global, y_global_normalized)
+            deep_kernel_model = self._train_deepkernel(
+                x_global, y_global_normalized)
         deep_kernel_model_posterior = deep_kernel_model.posterior(x_global)
-
         print('prediction errors',
               deep_kernel_model_posterior.mean.flatten() - ((y_global - y_global.mean()) / y_global.std()).flatten())
-
-        thompson_sampling = MaxPosteriorSampling(model=deep_kernel_model, replacement=False)
-
+        thompson_sampling = MaxPosteriorSampling(
+            model=deep_kernel_model, replacement=False)
         sobol = SobolEngine(self.dim, scramble=True)
         X_cand = sobol.draw(1000)
-
         with torch.no_grad():  # We don't need gradients when using TS
             X_next = thompson_sampling(X_cand, num_samples=10)
             print('Testing DKL TS')
             print(X_next)
             print(objective(X_next))
 
+        save(x_global, y_global, self.name, objective.name())
+        
     def _train_deepkernel(self, X: Tensor, y: Tensor, num_iters: int = 100):
         likelihood = GaussianLikelihood()
         feature_extractor = FeatureExtractor(objective.dim())
