@@ -4,12 +4,12 @@ import torch
 from torch.nn import Linear, ReLU
 from botorch.models.gpytorch import GPyTorchModel
 
+import gpytorch
 from gpytorch.kernels import Kernel, MaternKernel, ScaleKernel, GridInterpolationKernel
 from gpytorch.means import ConstantMean
 from gpytorch.models import ExactGP
 from gpytorch.utils.grid import ScaleToBounds
 from gpytorch.distributions import MultivariateNormal
-
 
 
 class FeatureExtractor(torch.nn.Sequential):
@@ -39,6 +39,10 @@ class DeepKernelGPRegressor(GPyTorchModel, ExactGP):
 
         # This module will scale the NN features so that they're nice values
         self.scale_to_bounds = ScaleToBounds(-1., 1.)
+
+    def __call__(self, *args, **kwargs):
+        with gpytorch.settings.debug(False):
+            return super().__call__(*args, **kwargs)
 
     def forward(self, x):
         # We're first putting our data through a deep net (feature extractor)

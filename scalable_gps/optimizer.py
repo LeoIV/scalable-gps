@@ -3,13 +3,19 @@ from typing import Optional, Dict
 
 import torch
 import tqdm
+import gpytorch
 from botorch.generation import MaxPosteriorSampling
 from botorch.models import SingleTaskGP
 from gpytorch.likelihoods import GaussianLikelihood
 from gpytorch.mlls import ExactMarginalLogLikelihood
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, DataFrame
+from pyspark.ml.pipeline import Pipeline
+
 from torch import Tensor
 from torch.quasirandom import SobolEngine
+
+from sparktorch import serialize_torch_obj, SparkTorch
+from pyspark.ml.feature import VectorAssembler
 
 from dkl_model import FeatureExtractor, DeepKernelGPRegressor
 from objective import OptimizationProblem
@@ -17,11 +23,12 @@ from scalable_gps.objective import Ackley
 from scalable_gps.turbo_state import TurboInstance
 from utils import save
 
+
 class ScalableOptimizer:
 
     def __init__(self,
                  objective: OptimizationProblem,
-                 outer_iterations: int = 0,
+                 outer_iterations: int = 10,
                  num_parallel: int = 2,
                  num_total_iterations: int = -1,
                  batch_size: int = 2,
@@ -68,6 +75,7 @@ class ScalableOptimizer:
 
             deep_kernel_model = self._train_deepkernel(
                 x_global, y_global_normalized)
+
         deep_kernel_model_posterior = deep_kernel_model.posterior(x_global)
         print('prediction errors',
               deep_kernel_model_posterior.mean.flatten() - ((y_global - y_global.mean()) / y_global.std()).flatten())
@@ -77,38 +85,52 @@ class ScalableOptimizer:
         X_cand = sobol.draw(1000)
         with torch.no_grad():  # We don't need gradients when using TS
             X_next = thompson_sampling(X_cand, num_samples=10)
-            print('Testing DKL TS')
-            print(X_next)
-            print(objective(X_next))
 
         save(x_global, y_global, self.name, objective.name())
-        
+
     def _train_deepkernel(self, X: Tensor, y: Tensor, num_iters: int = 100):
         likelihood = GaussianLikelihood()
         feature_extractor = FeatureExtractor(objective.dim())
         dkl_model = DeepKernelGPRegressor(X, y, likelihood, feature_extractor)
 
-        optimizer = torch.optim.Adam([
-            {'params': dkl_model.feature_extractor.parameters()},
-            {'params': dkl_model.covar_module.parameters()},
-            {'params': dkl_model.mean_module.parameters()},
-            {'params': dkl_model.likelihood.parameters()},
-        ], lr=0.01)
-        mll = ExactMarginalLogLikelihood(likelihood, dkl_model)
-        iterator = tqdm.tqdm(range(num_iters))
-        # on-the-fly SGD - should probably be implemented according to a paper on overfit in DKL
-        for i in iterator:
-            # Zero backprop gradients
-            optimizer.zero_grad()
-            # Get output from model
-            output = dkl_model(X)
-            # Calc loss and backprop derivatives
-            loss = -mll(output, y)
+        optimizer = torch.optim.Adam
 
-            loss.backward()
-            iterator.set_postfix(loss=loss.item())
-            optimizer.step()
-        return dkl_model
+        # make all the parameter generators into lists
+        parameters = [{'params': [p for p in dkl_model.feature_extractor.parameters()]},
+                      {'params': [
+                          p for p in dkl_model.covar_module.parameters()]},
+                      {'params': [p for p in dkl_model.mean_module.parameters()]},
+                      {'params': [p for p in dkl_model.likelihood.parameters()]},
+                      ]
+        mll = ExactMarginalLogLikelihood(likelihood, dkl_model)
+        torch_obj = serialize_torch_obj(
+            model=dkl_model,
+            # need to return a scalar, returns a vector of inidividual losses
+            criterion=lambda output, y_train: mll(output, y_train).sum(),
+            optimizer=optimizer,
+            lr=0.01
+        )
+        data = self.sc.parallelize(
+            torch.cat((y.unsqueeze(-1), X), axis=1).detach().numpy().tolist())
+        df = data.toDF()
+        vector_assembler = VectorAssembler(
+            inputCols=df.columns[1:self.dim+1], outputCol='features')
+        # Setup features
+
+        stm = SparkTorch(
+            inputCol='features',
+            labelCol='_1',  # this tells SparkTorch to consider the first column as the label column
+            predictionCol='predictions',
+            torchObj=torch_obj,
+            verbose=0,
+            iters=3,
+            miniBatch=16
+        )
+
+        # Can be used in a pipeline and saved.
+        p = Pipeline(stages=[vector_assembler, stm]).fit(df)
+        pt_model = p.stages[1].getPytorchModel()
+        return pt_model
 
 
 if __name__ == '__main__':
