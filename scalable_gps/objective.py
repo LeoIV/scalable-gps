@@ -18,6 +18,7 @@ class OptimizationProblem(ABC):
 
     @abstractmethod
     def __init__(self, dim: int):
+        self._name = None
         raise NotImplementedError()
 
     @abstractmethod
@@ -38,7 +39,7 @@ class OptimizationProblem(ABC):
 
     @abstractmethod
     def name(self) -> str:
-        raise NotImplementedError()
+        return self._name
 
 
 class Ackley(OptimizationProblem):
@@ -60,15 +61,13 @@ class Ackley(OptimizationProblem):
     def dim(self) -> int:
         return self._dim
 
-    def name(self) -> str:
-        return self._name
-
 
 class Griewank(OptimizationProblem):
 
     def __init__(self, dim: int):
         self._dim = dim
         self._griewank = _Griewank(dim=dim, negate=True)
+        self._name = f'Griewank-{dim}'
 
     def __call__(self, x: torch.Tensor):
         return eval_objective(x, self._griewank)
@@ -96,6 +95,7 @@ class Rover(OptimizationProblem):
             goal_miss_cost=l2cost,
         )
         self._domain = domain
+        self._name = "Roverplanning"
 
     def __call__(self, x: torch.Tensor):
         x = x.numpy()
