@@ -2,21 +2,17 @@ import math
 from dataclasses import dataclass
 from typing import Optional, Dict, List
 
-import torch
-from torch import Tensor
 import gpytorch
-from torch.quasirandom import SobolEngine
-from botorch.models import SingleTaskGP
-from gpytorch.models import ExactGP
-from gpytorch.likelihoods import Likelihood, GaussianLikelihood
-from gpytorch.constraints import Interval
-from gpytorch.kernels import Kernel, MaternKernel, ScaleKernel
-from gpytorch.mlls import MarginalLogLikelihood, ExactMarginalLogLikelihood
+import torch
 from botorch.optim.fit import fit_gpytorch_torch
+from gpytorch.likelihoods import Likelihood, GaussianLikelihood
+from gpytorch.mlls import MarginalLogLikelihood, ExactMarginalLogLikelihood
+from gpytorch.models import ExactGP
+from torch import Tensor
+from torch.quasirandom import SobolEngine
 
-from scalable_gps.dkl_model import DeepKernelGPRegressor
 from scalable_gps.objective import OptimizationProblem
-from scalable_gps.turbo_util import optimize_llhood, generate_batch
+from scalable_gps.turbo_util import generate_batch
 
 
 class TurboInstance:
@@ -28,7 +24,6 @@ class TurboInstance:
             model: ExactGP,
             model_kwargs: Dict = {},
             likelihood: Likelihood = GaussianLikelihood,
-            likelihood_kwargs: Dict = {},
             model_parameters: List[Dict[str, Tensor]] = None,
             mll_opt: MarginalLogLikelihood = ExactMarginalLogLikelihood,
             n_init: Optional[int] = None,
@@ -67,12 +62,12 @@ class TurboInstance:
         self.X = torch.cat((self.X, x_init), dim=0)
         self.y = torch.cat((self.y, y_init))
 
-        model_parameters = None
         while not self.state.restart_triggered:
             train_y = (self.y - self.y.mean()) / self.y.std()
 
             model = self.model(
-                self.X, train_y.unsqueeze(-1), **self.model_kwargs) if not hasattr(self.model, 'feature_extractor') else self.model
+                self.X, train_y.unsqueeze(-1), **self.model_kwargs) if not hasattr(self.model,
+                                                                                   'feature_extractor') else self.model
 
             with gpytorch.settings.max_cholesky_size(float("inf")):
                 # Fit the model
@@ -80,7 +75,6 @@ class TurboInstance:
                     mll = self.mll_opt(model.likelihood, model)
                     fit_gpytorch_torch(mll, options={'disp': False})
 
-                model_parameters = model.state_dict()
                 # Create a batch
                 x_next = generate_batch(
                     state=self.state,

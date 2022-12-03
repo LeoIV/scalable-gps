@@ -1,16 +1,14 @@
-import sys
 import os
-from os.path import join, dirname, isdir
-from glob import glob
-
-from typing import List
 from copy import copy
+from glob import glob
+from os.path import join
+from typing import List
+
 import matplotlib.pyplot as plt
-from matplotlib import ticker
 import numpy as np
-from scipy.stats import sem
 import pandas as pd
-from pandas.errors import EmptyDataError
+from scipy.stats import sem
+
 from plotconfig import (
     COLORS,
     REGRETS,
@@ -21,7 +19,8 @@ from plotconfig import (
 
 plt.rcParams['font.family'] = 'serif'
 
-# Some constants for better estetics
+
+# Some constants for better aesthetics
 # '#377eb8', '#ff7f00', '#4daf4a'
 # '#f781bf', '#a65628', '#984ea3'
 # '#999999', '#e41a1c', '#dede00'
@@ -67,8 +66,8 @@ def filter_paths(all_paths, included_names=None):
 
 def get_files_from_experiment(experiment_name, benchmarks=None, acquisitions=None):
     '''
-    For a specific expefiment, gets a dictionary of all the {benchmark: {method: [output_file_paths]}}
-    as a dict, includiong all benchmarks and acquisition functions unless specified otherwise in 
+    For a specific experiment, gets a dictionary of all the {benchmark: {method: [output_file_paths]}}
+    as a dict, including all benchmarks and acquisition functions unless specified otherwise in
     the arguments.
     '''
     paths_dict = {}
@@ -146,8 +145,9 @@ def compute_regret(df, run_name, regret, log=True):
     return pd.DataFrame(mins)
 
 
-def plot_optimization(data_dict, preprocessing=None, title='benchmark', xlabel='X', ylabel='Y', fix_range=None, only_plot=-1, names=None, predictions=False, init=2, n_markers=20, n_std=1, show_ylabel=True, maxlen=0, plot_ax=None, first=True, show_noise=None):
-    lowest_doe_samples = 1e10
+def plot_optimization(data_dict, preprocessing=None, title='benchmark', xlabel='X', ylabel='Y', fix_range=None,
+                      only_plot=-1, names=None, predictions=False, init=2, n_markers=20, n_std=1, show_ylabel=True,
+                      maxlen=0, plot_ax=None, first=True, show_noise=None):
 
     if plot_ax is None:
         fig, ax = plt.subplots(figsize=(25, 16))
@@ -175,16 +175,16 @@ def plot_optimization(data_dict, preprocessing=None, title='benchmark', xlabel='
 
         y_mean = data_array.mean(axis=1)
         y_std = sem(data_array, axis=1)
-        X = np.arange(1, maxlen+1)
+        X = np.arange(1, maxlen + 1)
         if fix_range is not None:
             ax.set_ylim(fix_range)
 
         ax.plot(X, y_mean, **plot_layout)
-        ax.fill_between(X, y_mean-n_std*y_std, y_mean+n_std *
+        ax.fill_between(X, y_mean - n_std * y_std, y_mean + n_std *
                         y_std, alpha=0.1, color=plot_layout['c'])
-        ax.plot(X, y_mean-n_std*y_std, alpha=0.5, color=plot_layout['c'])
-        ax.plot(X, y_mean+n_std*y_std, alpha=0.5, color=plot_layout['c'])
-        min_ = min((y_mean-n_std*y_std).min(), min_)
+        ax.plot(X, y_mean - n_std * y_std, alpha=0.5, color=plot_layout['c'])
+        ax.plot(X, y_mean + n_std * y_std, alpha=0.5, color=plot_layout['c'])
+        min_ = min((y_mean - n_std * y_std).min(), min_)
 
     ax.axvline(x=init, color='k', linestyle=':', linewidth=4)
     ax.tick_params(axis='x', labelsize=18)
@@ -215,7 +215,6 @@ def plot(algos: List[str], functions: List[str], experiment_name: str):
 
     fig, ax = plt.subplots(1, num_benchmarks, figsize=(25, 9))
     for benchmark_idx, (benchmark_name, paths) in enumerate(files.items()):
-
         preprocessing = [(get_min, [], {'metric': 'y'}), (compute_regret, [], {
             'log': True, 'regret': REGRETS[benchmark_name]})]
         plot_optimization(paths,
