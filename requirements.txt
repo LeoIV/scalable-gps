@@ -1,3 +1,4 @@
 pyspark[sql,pandas_on_spark]
 scikit-learn
 botorch
+sparktorch

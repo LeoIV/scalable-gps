@@ -4,8 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="28d642e0-76f1-4f62-b11c-b5d6da65c448" name="Changes" comment="add more benchmarks">
-      <change beforePath="$PROJECT_DIR$/scalable_gps/objective.py" beforeDir="false" afterPath="$PROJECT_DIR$/scalable_gps/objective.py" afterDir="false" />
+    <list default="true" id="28d642e0-76f1-4f62-b11c-b5d6da65c448" name="Changes" comment="fix rover benchmark for maximization problem">
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -172,7 +172,7 @@
       <workItem from="1669282325337" duration="6000" />
       <workItem from="1669852139058" duration="149000" />
       <workItem from="1670088818794" duration="1069000" />
-      <workItem from="1670089903747" duration="4193000" />
+      <workItem from="1670089903747" duration="4297000" />
     </task>
     <task id="LOCAL-00001" summary="stuff">
       <created>1666795298356</created>
@@ -258,7 +258,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670098902529</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="fix rover benchmark for maximization problem">
+      <created>1670099400612</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1670099400612</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -286,12 +293,13 @@
     <MESSAGE value="optimizing hyperparameters, making things a bit more efficient" />
     <MESSAGE value="outer loop proposal" />
     <MESSAGE value="add more benchmarks" />
-    <option name="LAST_COMMIT_MESSAGE" value="add more benchmarks" />
+    <MESSAGE value="fix rover benchmark for maximization problem" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix rover benchmark for maximization problem" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/scalable_gps$main.coverage" NAME="main Coverage Results" MODIFIED="1666794202703" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/scalable_gps$turbo_loop.coverage" NAME="turbo_loop Coverage Results" MODIFIED="1667317402531" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scalable_gps" />
     <SUITE FILE_PATH="coverage/scalable_gps$test.coverage" NAME="test Coverage Results" MODIFIED="1666948727443" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/scalable_gps$optimizer.coverage" NAME="optimizer Coverage Results" MODIFIED="1670090475321" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scalable_gps" />
+    <SUITE FILE_PATH="coverage/scalable_gps$optimizer.coverage" NAME="optimizer Coverage Results" MODIFIED="1670099483142" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scalable_gps" />
   </component>
 </project>
