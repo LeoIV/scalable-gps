@@ -1,15 +1,12 @@
-import math
-import tqdm
-import torch
-from torch.nn import Linear, ReLU
-from botorch.models.gpytorch import GPyTorchModel
-
 import gpytorch
-from gpytorch.kernels import Kernel, MaternKernel, ScaleKernel, GridInterpolationKernel
+import torch
+from botorch.models.gpytorch import GPyTorchModel
+from gpytorch.distributions import MultivariateNormal
+from gpytorch.kernels import MaternKernel, ScaleKernel, GridInterpolationKernel
 from gpytorch.means import ConstantMean
 from gpytorch.models import ExactGP
 from gpytorch.utils.grid import ScaleToBounds
-from gpytorch.distributions import MultivariateNormal
+from torch.nn import Linear, ReLU
 
 
 class FeatureExtractor(torch.nn.Sequential):

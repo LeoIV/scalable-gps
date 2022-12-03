@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 
-import torch
 import numpy as np
+import torch
 from botorch.test_functions import Ackley as _Ackley, Griewank as _Griewank
 from botorch.utils.transforms import unnormalize
 

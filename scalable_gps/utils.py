@@ -1,9 +1,8 @@
 import os
-from os.path import join, dirname, abspath
+from os.path import join
 
-import numpy as np
-import torch
 import pandas as pd
+import torch
 
 
 def save(X, y, optimizer_name, function_name):
@@ -16,7 +15,6 @@ def save(X, y, optimizer_name, function_name):
     results_cols.append('y')
     
     result_path = join(join(join(os.getcwd(), 'results', function_name), optimizer_name))
-    run_index = os.listdir(result_path)
     os.makedirs(result_path, exist_ok=True)
 
     run_index = len(os.listdir(result_path))
