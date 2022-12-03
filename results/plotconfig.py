@@ -8,14 +8,14 @@ REGRETS = {
     'Branin': -0.397887,
     'Hartmann-3': 3.86278,
     'Hartmann-6': 3.32237,
-    'Ackley-5': 0,
+    'Ackley-4': 0,
 }
 
 INIT_NBRS = {
     'Branin': 3,
     'Hartmann-3': 4,
     'Hartmann-6': 7,
-    'Ackley-5': 9,
+    'Ackley-4': 9,
 }
 
 
