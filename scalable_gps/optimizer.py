@@ -33,6 +33,7 @@ class ScalableOptimizer:
                  num_total_iterations: int = -1,
                  batch_size: int = 2,
                  turbo_kwargs: Optional[Dict] = {},
+                 use_dkl: bool = True,
                  name: str = 'TurBO-DKL'
                  ):
         self.spark = SparkSession.builder.getOrCreate()
@@ -46,6 +47,7 @@ class ScalableOptimizer:
         self.dim = objective.dim()
         self.outer_iterations = outer_iterations
         self.name = name
+        self.use_dkl = False
 
     def optimize(self):
         x_global = torch.empty((0, self.dim))
@@ -73,18 +75,9 @@ class ScalableOptimizer:
             y_global = torch.cat((y_global, y_aggregated), dim=0)
             y_global_normalized = (y_global - y_global.mean()) / y_global.std()
 
-            deep_kernel_model = self._train_deepkernel(
-                x_global, y_global_normalized)
-
-        deep_kernel_model_posterior = deep_kernel_model.posterior(x_global)
-        print('prediction errors',
-              deep_kernel_model_posterior.mean.flatten() - ((y_global - y_global.mean()) / y_global.std()).flatten())
-        thompson_sampling = MaxPosteriorSampling(
-            model=deep_kernel_model, replacement=False)
-        sobol = SobolEngine(self.dim, scramble=True)
-        X_cand = sobol.draw(1000)
-        with torch.no_grad():  # We don't need gradients when using TS
-            X_next = thompson_sampling(X_cand, num_samples=10)
+            if self.use_dkl:
+                deep_kernel_model = self._train_deepkernel(
+                    x_global, y_global_normalized)
 
         save(x_global, y_global, self.name, objective.name())
 
@@ -108,7 +101,7 @@ class ScalableOptimizer:
             # need to return a scalar, returns a vector of inidividual losses
             criterion=lambda output, y_train: mll(output, y_train).sum(),
             optimizer=optimizer,
-            lr=0.01
+            lr=1e-3
         )
         data = self.sc.parallelize(
             torch.cat((y.unsqueeze(-1), X), axis=1).detach().numpy().tolist())
@@ -123,13 +116,14 @@ class ScalableOptimizer:
             predictionCol='predictions',
             torchObj=torch_obj,
             verbose=0,
-            iters=3,
+            iters=30,
             miniBatch=16
         )
-
+        print('Training DKL...')
         # Can be used in a pipeline and saved.
         p = Pipeline(stages=[vector_assembler, stm]).fit(df)
         pt_model = p.stages[1].getPytorchModel()
+        print('Trained.')
         return pt_model
 
 
