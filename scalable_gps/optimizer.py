@@ -40,7 +40,7 @@ class ScalableOptimizer:
         self.dim = objective.dim()
         self.outer_iterations = outer_iterations
         self.name = name
-        self.use_dkl = False
+        self.use_dkl = use_dkl
 
     def optimize(self):
         x_global = torch.empty((0, self.dim))

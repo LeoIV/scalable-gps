@@ -7,6 +7,7 @@
     <list default="true" id="28d642e0-76f1-4f62-b11c-b5d6da65c448" name="Changes" comment="add setup py, refactoring">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/results/plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/results/plot.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scalable_gps/optimizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/scalable_gps/optimizer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -175,6 +176,7 @@
       <workItem from="1669852139058" duration="149000" />
       <workItem from="1670088818794" duration="1069000" />
       <workItem from="1670089903747" duration="4297000" />
+      <workItem from="1670190346069" duration="433000" />
     </task>
     <task id="LOCAL-00001" summary="stuff">
       <created>1666795298356</created>
@@ -274,7 +276,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670108317640</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="add setup py, refactoring">
+      <created>1670110379433</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1670110379433</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

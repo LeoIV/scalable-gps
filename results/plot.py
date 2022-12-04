@@ -227,5 +227,5 @@ def plot(algos: List[str], functions: List[str], experiment_name: str):
                           show_ylabel=False,
                           )
     plt.tight_layout()
-    plt.savefig(f'{os.getcwd()}/{experiment_name}_{'_'.join(functions)}.pdf')
+    plt.savefig(f"{os.getcwd()}/{experiment_name}_{'_'.join(functions)}.pdf")
     plt.show()
