@@ -193,15 +193,8 @@ def plot_optimization(data_dict, preprocessing=None, title='benchmark', xlabel='
     ax.set_title(title, fontsize=30)
     if show_ylabel:
         ax.set_ylabel(ylabel, fontsize=24)
-
-    if first:
-        handles, labels = ax.get_legend_handles_labels()
-        sorted_indices = np.argsort(labels[:-1])
-        sorted_indices = np.append(sorted_indices, len(labels) - 1)
-        ax.legend(np.array(handles)[sorted_indices], np.array(
-            labels)[sorted_indices], fontsize=24)
-    if plot_ax is not None:
-        return ax
+    ax.legend()
+    return ax
 
 
 def plot(algos: List[str], functions: List[str], experiment_name: str):
@@ -214,6 +207,9 @@ def plot(algos: List[str], functions: List[str], experiment_name: str):
         raise ValueError('No files')
 
     fig, ax = plt.subplots(1, num_benchmarks, figsize=(25, 9))
+    if num_benchmarks == 1:
+        ax = [ax]
+
     for benchmark_idx, (benchmark_name, paths) in enumerate(files.items()):
         preprocessing = [(get_min, [], {'metric': 'y'}), (compute_regret, [], {
             'log': True, 'regret': REGRETS[benchmark_name]})]
