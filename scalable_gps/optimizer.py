@@ -1,14 +1,13 @@
+import os
 from logging import info
 from typing import Optional, Dict
 
 import torch
+import tqdm
 from botorch.models import SingleTaskGP
 from gpytorch.likelihoods import GaussianLikelihood
 from gpytorch.mlls import ExactMarginalLogLikelihood
-from pyspark.ml.feature import VectorAssembler
-from pyspark.ml.pipeline import Pipeline
 from pyspark.sql import SparkSession
-from sparktorch import serialize_torch_obj, SparkTorch
 from torch import Tensor
 
 from scalable_gps.dkl_model import FeatureExtractor, DeepKernelGPRegressor
@@ -28,7 +27,7 @@ class ScalableOptimizer:
                  turbo_kwargs: Optional[Dict] = {},
                  use_dkl: bool = True,
                  name: str = 'TurBO-DKL',
-                 save_path: str = ""
+                 save_path: str = os.getcwd()
                  ):
         self.spark = SparkSession.builder.getOrCreate()
         self.sc = self.spark.sparkContext
@@ -81,42 +80,24 @@ class ScalableOptimizer:
         feature_extractor = FeatureExtractor(self.objective.dim())
         dkl_model = DeepKernelGPRegressor(X, y, likelihood, feature_extractor)
 
-        optimizer = torch.optim.Adam
-
-        # make all the parameter generators into lists
-        parameters = [{'params': [p for p in dkl_model.feature_extractor.parameters()]},
-                      {'params': [
-                          p for p in dkl_model.covar_module.parameters()]},
-                      {'params': [p for p in dkl_model.mean_module.parameters()]},
-                      {'params': [p for p in dkl_model.likelihood.parameters()]},
-                      ]
+        optimizer = torch.optim.Adam([
+            {'params': dkl_model.feature_extractor.parameters()},
+            {'params': dkl_model.covar_module.parameters()},
+            {'params': dkl_model.mean_module.parameters()},
+            {'params': dkl_model.likelihood.parameters()},
+        ], lr=0.01)
         mll = ExactMarginalLogLikelihood(likelihood, dkl_model)
-        torch_obj = serialize_torch_obj(
-            model=dkl_model,
-            # need to return a scalar, returns a vector of inidividual losses
-            criterion=lambda output, y_train: mll(output, y_train).sum(),
-            optimizer=optimizer,
-            lr=1e-3
-        )
-        data = self.sc.parallelize(
-            torch.cat((y.unsqueeze(-1), X), axis=1).detach().numpy().tolist())
-        df = data.toDF()
-        vector_assembler = VectorAssembler(
-            inputCols=df.columns[1:self.dim + 1], outputCol='features')
-        # Setup features
+        iterator = tqdm.tqdm(range(num_iters))
+        # on-the-fly SGD - should probably be implemented according to a paper on overfit in DKL
+        for i in iterator:
+            # Zero backprop gradients
+            optimizer.zero_grad()
+            # Get output from model
+            output = dkl_model(X)
+            # Calc loss and backprop derivatives
+            loss = -mll(output, y)
 
-        stm = SparkTorch(
-            inputCol='features',
-            labelCol='_1',  # this tells SparkTorch to consider the first column as the label column
-            predictionCol='predictions',
-            torchObj=torch_obj,
-            verbose=0,
-            iters=30,
-            miniBatch=16
-        )
-        print('Training DKL...')
-        # Can be used in a pipeline and saved.
-        p = Pipeline(stages=[vector_assembler, stm]).fit(df)
-        pt_model = p.stages[1].getPytorchModel()
-        print('Trained.')
-        return pt_model
+            loss.backward()
+            iterator.set_postfix(loss=loss.item())
+            optimizer.step()
+        return dkl_model
