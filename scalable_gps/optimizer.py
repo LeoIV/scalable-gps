@@ -27,7 +27,8 @@ class ScalableOptimizer:
                  batch_size: int = 2,
                  turbo_kwargs: Optional[Dict] = {},
                  use_dkl: bool = True,
-                 name: str = 'TurBO-DKL'
+                 name: str = 'TurBO-DKL',
+                 save_path: str = ""
                  ):
         self.spark = SparkSession.builder.getOrCreate()
         self.sc = self.spark.sparkContext
@@ -41,6 +42,7 @@ class ScalableOptimizer:
         self.outer_iterations = outer_iterations
         self.name = name
         self.use_dkl = use_dkl
+        self.save_path = save_path
 
     def optimize(self):
         x_global = torch.empty((0, self.dim))
@@ -72,7 +74,7 @@ class ScalableOptimizer:
                 deep_kernel_model = self._train_deepkernel(
                     x_global, y_global_normalized)
 
-        save(x_global, y_global, self.name, self.objective.name())
+        save(x_global, y_global, self.save_path, self.name, self.objective.name())
 
     def _train_deepkernel(self, X: Tensor, y: Tensor, num_iters: int = 100):
         likelihood = GaussianLikelihood()

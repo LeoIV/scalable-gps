@@ -5,7 +5,7 @@ import pandas as pd
 import torch
 
 
-def save(X, y, optimizer_name, function_name):
+def save(X: torch.Tensor, y: torch.Tensor, save_path: str, optimizer_name: str, function_name: str):
     if y.ndim == 1:
         y = y.unsqueeze(-1)
     results_array = torch.cat((X, y), dim=1).detach().numpy()
@@ -13,8 +13,8 @@ def save(X, y, optimizer_name, function_name):
 
     # retrieves the plotting data based on the name of this column - must be called y (or change plotting script)
     results_cols.append('y')
-    
-    result_path = join(join(join(os.getcwd(), 'results', function_name), optimizer_name))
+
+    result_path = join(join(join(save_path, function_name), optimizer_name))
     os.makedirs(result_path, exist_ok=True)
 
     run_index = len(os.listdir(result_path))
@@ -22,4 +22,3 @@ def save(X, y, optimizer_name, function_name):
     print(f'Saving run at {result_path}...')
     results_df.to_csv(f"{result_path}/run_{run_index}.csv", index=False)
     print(f'Saved.')
-    
