@@ -45,4 +45,4 @@ if __name__ == '__main__':
         ax.legend()
     plt.tight_layout()
     plt.show()
-    plt.savefig("results.png")
+    fig.savefig("results.png")
