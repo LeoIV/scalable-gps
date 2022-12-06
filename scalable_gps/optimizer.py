@@ -27,7 +27,8 @@ class ScalableOptimizer:
                  turbo_kwargs: Optional[Dict] = {},
                  use_dkl: bool = True,
                  name: str = 'TurBO-DKL',
-                 save_path: str = os.getcwd()
+                 save_path: str = os.getcwd(),
+                 seed: int = 0
                  ):
         self.spark = SparkSession.builder.getOrCreate()
         self.sc = self.spark.sparkContext
@@ -42,6 +43,7 @@ class ScalableOptimizer:
         self.name = name
         self.use_dkl = use_dkl
         self.save_path = save_path
+        self.seed = seed
 
     def optimize(self):
         x_global = torch.empty((0, self.dim))
@@ -55,7 +57,8 @@ class ScalableOptimizer:
                     batch_size=self.batch_size,
                     function=self.objective,
                     model=deep_kernel_model if deep_kernel_model is not None else SingleTaskGP,
-                    identifier=f"TR-{i}")
+                    identifier=f"TR-{i}",
+                    seed=int(f"{self.seed}{i+1}"))
                 for i in range(self.num_parallel)
             ]
             turbos = self.sc.parallelize(self.turbo_processes)

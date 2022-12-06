@@ -38,13 +38,14 @@ class TurboInstance:
         self.likelihood = likelihood
         self.parameters = model_parameters
         self.mll_opt = mll_opt
-        self.n_init = 2 * self.dim if n_init is None else n_init
+        self.n_init = self.dim if n_init is None else n_init
         self.state = TurboState(self.dim, self.batch_size)
         self.num_restarts = 10
         self.raw_samples = 512
         self.n_candidates = min(5000, max(2000, 200 * self.dim))
         self.identifier = identifier
         self.seed = seed
+
 
         self.X = torch.empty((0, self.dim))
         self.y = torch.empty(0)

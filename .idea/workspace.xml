@@ -4,11 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="28d642e0-76f1-4f62-b11c-b5d6da65c448" name="Changes" comment="add setup py, refactoring">
+    <list default="true" id="28d642e0-76f1-4f62-b11c-b5d6da65c448" name="Changes" comment="revert old dkl">
+      <change afterPath="$PROJECT_DIR$/results-old/plot.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/plot.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/plotconfig.py" beforeDir="false" afterPath="$PROJECT_DIR$/results-old/plotconfig.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scalable_gps/optimizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/scalable_gps/optimizer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scalable_gps/turbo_state.py" beforeDir="false" afterPath="$PROJECT_DIR$/scalable_gps/turbo_state.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,6 +47,7 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/leonard/IdeaProjects/scalable-gps/data&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -56,6 +60,11 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/data" />
+    </key>
+  </component>
   <component name="RunManager" selected="Python.main">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="scalable-gps" />
@@ -93,6 +102,28 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scalable_gps/optimizer.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="plot" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="scalable-gps" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/results" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/results/plot.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -148,9 +179,9 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.plot" />
         <item itemvalue="Python.turbo_loop" />
         <item itemvalue="Python.test" />
-        <item itemvalue="Python.optimizer" />
         <item itemvalue="Python.optimizer" />
       </list>
     </recent_temporary>
@@ -177,7 +208,8 @@
       <workItem from="1670088818794" duration="1069000" />
       <workItem from="1670089903747" duration="4297000" />
       <workItem from="1670190346069" duration="7129000" />
-      <workItem from="1670250325618" duration="4426000" />
+      <workItem from="1670250325618" duration="10625000" />
+      <workItem from="1670305652248" duration="3889000" />
     </task>
     <task id="LOCAL-00001" summary="stuff">
       <created>1666795298356</created>
@@ -291,7 +323,21 @@
       <option name="project" value="LOCAL" />
       <updated>1670190842911</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="revert old dkl">
+      <created>1670257886883</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1670257886883</updated>
+    </task>
+    <task id="LOCAL-00018" summary="revert old dkl">
+      <created>1670258017009</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1670258017009</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -362,11 +408,13 @@
     <MESSAGE value="add more benchmarks" />
     <MESSAGE value="fix rover benchmark for maximization problem" />
     <MESSAGE value="add setup py, refactoring" />
-    <option name="LAST_COMMIT_MESSAGE" value="add setup py, refactoring" />
+    <MESSAGE value="revert old dkl" />
+    <option name="LAST_COMMIT_MESSAGE" value="revert old dkl" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/scalable_gps$main.coverage" NAME="main Coverage Results" MODIFIED="1670196578012" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/scalable_gps$main.coverage" NAME="main Coverage Results" MODIFIED="1670307604219" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/scalable_gps$turbo_loop.coverage" NAME="turbo_loop Coverage Results" MODIFIED="1667317402531" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scalable_gps" />
+    <SUITE FILE_PATH="coverage/scalable_gps$plot.coverage" NAME="plot Coverage Results" MODIFIED="1670306476309" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/results" />
     <SUITE FILE_PATH="coverage/scalable_gps$test.coverage" NAME="test Coverage Results" MODIFIED="1666948727443" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/scalable_gps$optimizer.coverage" NAME="optimizer Coverage Results" MODIFIED="1670099483142" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scalable_gps" />
   </component>
