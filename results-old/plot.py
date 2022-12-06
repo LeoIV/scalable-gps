@@ -25,7 +25,7 @@ if __name__ == '__main__':
                 algo_benchs[bench][algo].append(y)
 
     # create figure with as many columns as benchmarks
-    fig, axs = plt.subplots(1, len(algo_benchs), figsize=(10, 5))
+    fig, axs = plt.subplots(1, len(algo_benchs), figsize=(11, 5))
 
     # plot the benchmarks
     for i, bench in enumerate(algo_benchs.keys()):
