@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 
 if __name__ == '__main__':
 
-    basedir = "."
+    basedir = "../results"
 
     algo_benchs = {}
 
@@ -33,8 +33,8 @@ if __name__ == '__main__':
         for algo, y in algo_benchs[bench].items():
             # max length for this algorithm on this benchmark
             maxlen = max([len(yy) for yy in y])
-            y = [np.concatenate([yy, np.ones(maxlen - len(yy)) * yy[-1]]) for yy in y]
-            mean = np.mean(np.array(y), axis=0)
+            y = -np.array([np.concatenate([yy, np.ones(maxlen - len(yy)) * yy[-1]]) for yy in y])
+            mean = np.mean(y, axis=0)
             # compute standard error of the mean
             std = np.std(y, ddof=1, axis=0) / np.sqrt(len(mean))
             ax.plot(np.arange(len(mean)), mean, label=algo, marker="x" if algo == "TurBO" else "^", markevery=50)
@@ -43,6 +43,7 @@ if __name__ == '__main__':
             ax.set_xlabel("Number of function evaluations")
         ax.set_title(bench)
         ax.legend()
+        ax.set_yscale("log")
     plt.tight_layout()
     plt.show()
     fig.savefig("../data/results.png")

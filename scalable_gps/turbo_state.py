@@ -110,7 +110,7 @@ class TurboState:
     dim: int
     batch_size: int
     length: float = 0.8
-    length_min: float = 0.5 ** 2
+    length_min: float = 0.5 ** 7
     length_max: float = 1.6
     failure_counter: int = 0
     failure_tolerance: int = float("nan")  # Note: Post-initialized
