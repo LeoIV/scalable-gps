@@ -4,14 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="28d642e0-76f1-4f62-b11c-b5d6da65c448" name="Changes" comment="revert old dkl">
-      <change afterPath="$PROJECT_DIR$/results-old/plot.py" afterDir="false" />
+    <list default="true" id="28d642e0-76f1-4f62-b11c-b5d6da65c448" name="Changes" comment="fixing seeds">
+      <change afterPath="$PROJECT_DIR$/data/results.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/plot.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/plotconfig.py" beforeDir="false" afterPath="$PROJECT_DIR$/results-old/plotconfig.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scalable_gps/optimizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/scalable_gps/optimizer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scalable_gps/turbo_state.py" beforeDir="false" afterPath="$PROJECT_DIR$/scalable_gps/turbo_state.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results-old/plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/results-old/plot.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,7 +61,7 @@
       <recent name="$PROJECT_DIR$/data" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.main">
+  <component name="RunManager" selected="Python.plot (1)">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="scalable-gps" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -88,7 +84,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="optimizer" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="plot (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="scalable-gps" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -96,12 +92,12 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/scalable_gps" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/results-old" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scalable_gps/optimizer.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/results-old/plot.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -178,11 +174,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.plot (1)" />
         <item itemvalue="Python.main" />
         <item itemvalue="Python.plot" />
         <item itemvalue="Python.turbo_loop" />
         <item itemvalue="Python.test" />
-        <item itemvalue="Python.optimizer" />
       </list>
     </recent_temporary>
   </component>
@@ -209,7 +205,7 @@
       <workItem from="1670089903747" duration="4297000" />
       <workItem from="1670190346069" duration="7129000" />
       <workItem from="1670250325618" duration="10625000" />
-      <workItem from="1670305652248" duration="3889000" />
+      <workItem from="1670305652248" duration="7870000" />
     </task>
     <task id="LOCAL-00001" summary="stuff">
       <created>1666795298356</created>
@@ -337,7 +333,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670258017009</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="fixing seeds">
+      <created>1670310002720</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1670310002720</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -409,10 +412,12 @@
     <MESSAGE value="fix rover benchmark for maximization problem" />
     <MESSAGE value="add setup py, refactoring" />
     <MESSAGE value="revert old dkl" />
-    <option name="LAST_COMMIT_MESSAGE" value="revert old dkl" />
+    <MESSAGE value="fixing seeds" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixing seeds" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/scalable_gps$main.coverage" NAME="main Coverage Results" MODIFIED="1670307604219" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/scalable_gps$plot__1_.coverage" NAME="plot (1) Coverage Results" MODIFIED="1670315307251" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/results-old" />
     <SUITE FILE_PATH="coverage/scalable_gps$turbo_loop.coverage" NAME="turbo_loop Coverage Results" MODIFIED="1667317402531" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scalable_gps" />
     <SUITE FILE_PATH="coverage/scalable_gps$plot.coverage" NAME="plot Coverage Results" MODIFIED="1670306476309" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/results" />
     <SUITE FILE_PATH="coverage/scalable_gps$test.coverage" NAME="test Coverage Results" MODIFIED="1666948727443" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
